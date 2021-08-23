@@ -164,6 +164,99 @@ class promise {
         return new promise((resolve, reject) => reject(reason));
     }
 
+    static all(promises) {
+        let promise2 = new promise((resolve, reject) => {
+            // 只有可迭代的对象才能用for-of
+            if (promises[Symbol.iterator]) {
+                // TODO: 这里不太清楚是不是必须按照原来数组的顺序放回结果，所有的iterable对象都有length属性吗？
+                /* let result = new Array(promises.length);
+                const resolveOne = (value, index) => {
+                    result[index] = value;
+                }
+                let index = 0; */
+                let result = [];
+                const resolveOne = (value) => {
+                    result.push(value);
+                    if (result.length === promises.length) {
+                        // 当所有Promise都解决后返回
+                        resolve(result);
+                    }
+                }
+                for (let elem of promises) {
+                    setTimeout(() => {
+                        this.#resolvePromise(promise2, elem, resolveOne, reject);// 一旦有一个拒绝->直接拒绝
+                    })
+                }
+            }
+        })
+        return promise2;
+    }
+
+    static allSettled(promises) {
+        let promise2 = new promise((resolve, reject) => {
+            // 只有可迭代的对象才能用for-of
+            if (promises[Symbol.iterator]) {
+                let result = [];
+                const resolveOne = (value) => {
+                    result.push({ status: "fulfilled", value });
+                    if (result.length === promises.length) {
+                        // 当所有Promise都解决后返回
+                        resolve(result);
+                    }
+                }
+                const rejectOne = (reason) => {
+                    result.push({ status: "rejected", reason });
+                    if (result.length === promises.length) {
+                        // 当所有Promise都解决后返回
+                        resolve(result);
+                    }
+                }
+                for (let elem of promises) {
+                    setTimeout(() => {
+                        this.#resolvePromise(promise2, elem, resolveOne, rejectOne);// 永远都不拒绝
+                    })
+                }
+            }
+        })
+        return promise2;
+    }
+
+    static race(promises) {
+        let promise2 = new promise((resolve, reject) => {
+            // 只有可迭代的对象才能用for-of
+            if (promises[Symbol.iterator]) {
+                for (let elem of promises) {
+                    setTimeout(() => {
+                        this.#resolvePromise(promise2, elem, resolve, reject);// 一旦有一个解决/拒绝
+                    })
+                }
+            }
+        })
+        return promise2;
+    }
+
+    static any(promises) { // ES2021新增
+        let promise2 = new promise((resolve, reject) => {
+            // 只有可迭代的对象才能用for-of
+            if (promises[Symbol.iterator]) {
+                let count = 0;
+                const rejectOne = (reason) => {
+                    count += 1;
+                    if (count === promises.length) {
+                        // 当所有Promise都拒绝后返回
+                        reject(result);
+                    }
+                }
+                for (let elem of promises) {
+                    setTimeout(() => {
+                        this.#resolvePromise(promise2, elem, resolve, rejectOne);// 只有所有都拒绝才拒绝
+                    })
+                }
+            }
+        })
+        return promise2;
+    }
+
     // 重写Object.toString(),返回当前promise的状态+值/原因
     toString() {
         let stateStr = `status: ${this.#promiseState}`;
