@@ -1,0 +1,22 @@
+{
+    "name": "my-promise",
+    "version": "1.0.0",
+    "description": "The first custom Promise realization of mine.",
+    "main": "index.js",
+    "scripts": {
+        "test": "node ./src/test.js",
+        "lint-test": "eslint src",
+        "lint": "eslint src --fix",
+        "lint:create": "eslint --init"
+    },
+    "keywords": [
+        "custom-Promise"
+    ],
+    "type": "module",
+    "author": "TagBug",
+    "license": "ISC",
+    "devDependencies": {
+        "eslint": "^7.32.0"
+    },
+    "dependencies": {}
+}
